@@ -19,16 +19,22 @@ async function run () {
     const draft = core.getInput('draft', { required: false }) === 'true'
     const prerelease = core.getInput('prerelease', { required: false }) === 'true'
 
-    const latestReleaseResponse = await github.repos.getLatestRelease({ owner, repo })
-    let releaseJson = null
+    let releaseResponse = null
+    try {
+      const response = await github.repos.getReleaseByTag({ owner, repo, tag })
 
-    if (latestReleaseResponse.name === tag) {
-      releaseJson = latestReleaseResponse
-    } else {
+      if (response.data.tag_name === tag) {
+        releaseResponse = response
+      }
+    } catch {
+    }
+
+    // If we couldn't find the release create a new one.
+    if (releaseResponse === null) {
       // Create a release
       // API Documentation: https://developer.github.com/v3/repos/releases/#create-a-release
       // Octokit Documentation: https://octokit.github.io/rest.js/#octokit-routes-repos-create-release
-      releaseJson = await github.repos.createRelease({
+      releaseResponse = await github.repos.createRelease({
         owner,
         repo,
         tag_name: tag,
@@ -42,7 +48,7 @@ async function run () {
     // Get the ID, html_url, and upload URL for the created Release from the response
     const {
       data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
-    } = releaseJson
+    } = releaseResponse
 
     // Set the output variables for use by other actions: https://github.com/actions/toolkit/tree/master/packages/core#inputsoutputs
     core.setOutput('id', releaseId)
