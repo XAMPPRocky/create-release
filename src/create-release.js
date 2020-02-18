@@ -19,7 +19,7 @@ async function run () {
     const draft = core.getInput('draft', { required: false }) === 'true'
     const prerelease = core.getInput('prerelease', { required: false }) === 'true'
 
-    const latestReleaseResponse = await github.repos.getRelease({ owner, repo, release_id: tag })
+    const latestReleaseResponse = await github.repos.getLatestRelease({ owner, repo })
     let releaseJson = null
 
     if (latestReleaseResponse.name === tag) {
